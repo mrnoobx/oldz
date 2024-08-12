@@ -77,13 +77,34 @@ class TgUploader:
         self.__upload_dest = user_dict.get('user_dump') or config_dict['USER_DUMP']
 
     async def __msg_to_reply(self):
-        if DUMP_CHAT_ID:= config_dict['DUMP_CHAT_ID']:
+        if DUMP_CHAT_ID := config_dict['DUMP_CHAT_ID']:
             if self.__listener.logMessage:
                 self.__sent_msg = await self.__listener.logMessage.copy(DUMP_CHAT_ID)
             else:
-                msg = f'<b>File Name</b>: <code>{escape(self.name)}</code>\n\n<b>#Leech_Completed</b>!\n<b>#cc</b>: {self.__listener.tag}\n<b>#User_id</b>: {self.__listener.message.from_user.id}'
+                msg = f'<b>File Name</b>: <code>{escape(self.name)}</code>\n\n<b>#Leech_Completed</b>!\n'
+                msg += f'<b>Done By</b>: {self.__listener.tag}\n'
+                msg += f'<b>User ID</b>: <code>{self.__listener.message.from_user.id}</code>'
                 self.__sent_msg = await bot.send_message(DUMP_CHAT_ID, msg, disable_web_page_preview=True)
-            
+            if self.__listener.dmMessage:
+                self.__sent_DMmsg = self.__listener.dmMessage
+          		 self.__sent_msg = self.__listener.message
+            try:
+                self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
+            except RPCError as e:
+                await self.__listener.onUploadError(f'{e.NAME} [{e.CODE}]: {e.MESSAGE}')
+            except Exception as e:
+                await self.__listener.onUploadError(e)
+            if self.__listener.dmMessage:
+                self.__sent_DMmsg = self.__listener.dmMessage
+        elif self.__listener.dmMessage:
+            self.__sent_msg = self.__listener.dmMessage
+        else:
+            self.__sent_msg = self.__listener.message
+        if self.__sent_msg is None:
+            await self.__listener.onUploadError('Cannot find the message to reply')
+            return False
+        return True
+
     async def __prepare_file(self, file_, dirpath):
         if self.__lprefix or self.__lremname:
             file_ = await remove_unwanted(file_, self.__lremname)
