@@ -87,13 +87,6 @@ class TgUploader:
                 self.__sent_msg = await bot.send_message(DUMP_CHAT_ID, msg, disable_web_page_preview=True)
             if self.__listener.dmMessage:
                 self.__sent_DMmsg = self.__listener.dmMessage
-            if IS_PREMIUM_USER:
-                try:
-                    self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
-                except RPCError as e:
-                    await self.__listener.onUploadError(f'{e.NAME} [{e.CODE}]: {e.MESSAGE}')
-                except Exception as e:
-                    await self.__listener.onUploadError(e)
         elif IS_PREMIUM_USER:
             if not self.__listener.isSuperGroup:
                 await self.__listener.onUploadError('Use SuperGroup to leech with User!')
