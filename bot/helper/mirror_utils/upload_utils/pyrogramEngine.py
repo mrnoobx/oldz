@@ -76,7 +76,7 @@ class TgUploader:
             self.__thumb = None
         self.__upload_dest = user_dict.get('user_dump') or config_dict['USER_DUMP']
 
-    async def __msg_to_reply(self):
+        async def __msg_to_reply(self):
         if DUMP_CHAT_ID := config_dict['DUMP_CHAT_ID']:
             if self.__listener.logMessage:
                 self.__sent_msg = await self.__listener.logMessage.copy(DUMP_CHAT_ID)
@@ -87,7 +87,18 @@ class TgUploader:
                 self.__sent_msg = await bot.send_message(DUMP_CHAT_ID, msg, disable_web_page_preview=True)
             if self.__listener.dmMessage:
                 self.__sent_DMmsg = self.__listener.dmMessage
-          		 self.__sent_msg = self.__listener.message
+            if IS_PREMIUM_USER:
+                try:
+                    self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
+                except RPCError as e:
+                    await self.__listener.onUploadError(f'{e.NAME} [{e.CODE}]: {e.MESSAGE}')
+                except Exception as e:
+                    await self.__listener.onUploadError(e)
+        elif IS_PREMIUM_USER:
+            if not self.__listener.isSuperGroup:
+                await self.__listener.onUploadError('Use SuperGroup to leech with User!')
+                return False
+            self.__sent_msg = self.__listener.message
             try:
                 self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
             except RPCError as e:
@@ -104,6 +115,7 @@ class TgUploader:
             await self.__listener.onUploadError('Cannot find the message to reply')
             return False
         return True
+
 
     async def __prepare_file(self, file_, dirpath):
         if self.__lprefix or self.__lremname:
