@@ -76,7 +76,7 @@ class TgUploader:
             self.__thumb = None
         self.__upload_dest = user_dict.get('user_dump') or config_dict['USER_DUMP']
 
-        async def __msg_to_reply(self):
+    async def __msg_to_reply(self):
         if DUMP_CHAT_ID := config_dict['DUMP_CHAT_ID']:
             if self.__listener.logMessage:
                 self.__sent_msg = await self.__listener.logMessage.copy(DUMP_CHAT_ID)
@@ -115,7 +115,6 @@ class TgUploader:
             await self.__listener.onUploadError('Cannot find the message to reply')
             return False
         return True
-
 
     async def __prepare_file(self, file_, dirpath):
         if self.__lprefix or self.__lremname:
