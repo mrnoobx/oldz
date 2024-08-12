@@ -83,21 +83,7 @@ class TgUploader:
             else:
                 msg = f'<b>File Name</b>: <code>{escape(self.name)}</code>\n\n<b>#Leech_Completed</b>!\n<b>#cc</b>: {self.__listener.tag}\n<b>#User_id</b>: {self.__listener.message.from_user.id}'
                 self.__sent_msg = await bot.send_message(DUMP_CHAT_ID, msg, disable_web_page_preview=True)
-            if self.__listener.dmMessage:
-                self.__sent_DMmsg = self.__listener.dmMessage
-        elif IS_PREMIUM_USER:
-            if not self.__listener.isSuperGroup:
-                await self.__listener.onUploadError('Use SuperGroup to leech with User!')
-                return
-            self.__sent_msg = await bot.get_messages(chat_id=self.__listener.message.chat.id,
-                                                          message_ids=self.__listener.uid)
-            if self.__listener.dmMessage:
-                self.__sent_DMmsg = self.__listener.dmMessage
-        elif self.__listener.dmMessage:
-            self.__sent_msg = self.__listener.dmMessage
-        else:
-            self.__sent_msg = self.__listener.message
-          
+            
     async def __prepare_file(self, file_, dirpath):
         if self.__lprefix or self.__lremname:
             file_ = await remove_unwanted(file_, self.__lremname)
