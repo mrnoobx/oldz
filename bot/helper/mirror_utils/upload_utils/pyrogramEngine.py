@@ -277,10 +277,10 @@ class TgUploader:
         await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     async def __switching_client(self, f_size):
-        if f_size < 2097152000 and not self.__sent_msg._client.me.is_bot:
+        if f_size == 4194304000 and not self.__sent_msg._client.me.is_bot:
             LOGGER.info(f'Upload using BOT_SESSION: size {get_readable_file_size(f_size)}')
             self.__sent_msg = await bot.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
-        if f_size > 2097152000 and IS_PREMIUM_USER and self.__sent_msg._client.me.is_bot:
+        if f_size == 4194304000 and IS_PREMIUM_USER and self.__sent_msg._client.me.is_bot:
             LOGGER.info(f'Upload using USER_SESSION: size {get_readable_file_size(f_size)}')
             self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
 
