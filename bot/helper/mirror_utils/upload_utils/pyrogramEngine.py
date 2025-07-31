@@ -94,6 +94,17 @@ class TgUploader:
                     await self.__listener.onUploadError(f'{e.NAME} [{e.CODE}]: {e.MESSAGE}')
                 except Exception as e:
                     await self.__listener.onUploadError(e)
+        elif IS_PREMIUM_USER:
+            if not self.__listener.isSuperGroup:
+                await self.__listener.onUploadError('Use SuperGroup to leech with User!')
+                return False
+            self.__sent_msg = self.__listener.message
+            try:
+                self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
+            except RPCError as e:
+                await self.__listener.onUploadError(f'{e.NAME} [{e.CODE}]: {e.MESSAGE}')
+            except Exception as e:
+                await self.__listener.onUploadError(e)
             if self.__listener.dmMessage:
                 self.__sent_DMmsg = self.__listener.dmMessage
         elif self.__listener.dmMessage:
@@ -271,16 +282,15 @@ class TgUploader:
             msg = f'<b>File Name</b>: <code>{escape(self.name)}</code>\n\n'
             msg += f'<b>LeechCompleted</b>!\n<b>Done By</b>: {self.__listener.tag}\n'
             msg += f'<b>User ID</b>: <code>{self.__listener.message.from_user.id}</code>'
-            if self.__sent_msg is not None:
-                await self.__sent_msg.reply(text=msg, quote=True, disable_web_page_preview=True)
+            await self.__sent_msg.reply(text=msg, quote=True, disable_web_page_preview=True)
         LOGGER.info(f"Leech Completed: {self.name}")
         await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     async def __switching_client(self, f_size):
-        if f_size == 4194304000 and not self.__sent_msg._client.me.is_bot:
+        if f_size < 2097152000 and not self.__sent_msg._client.me.is_bot:
             LOGGER.info(f'Upload using BOT_SESSION: size {get_readable_file_size(f_size)}')
             self.__sent_msg = await bot.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
-        if f_size == 4194304000 and IS_PREMIUM_USER and self.__sent_msg._client.me.is_bot:
+        if f_size > 2097152000 and IS_PREMIUM_USER and self.__sent_msg._client.me.is_bot:
             LOGGER.info(f'Upload using USER_SESSION: size {get_readable_file_size(f_size)}')
             self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
 
@@ -294,11 +304,9 @@ class TgUploader:
             )
         except Exception as err:
             if isinstance(err, RPCError):
-                LOGGER.error(
-                    f"Error while sending dm {err.NAME}: {err.MESSAGE}")
+                LOGGER.error(f"Error while sending dm {err.NAME}: {err.MESSAGE}")
             else:
-                LOGGER.error(
-                    f"Error while sending dm {err.__class__.__name__}")
+                LOGGER.error(f"Error while sending dm {err.__class__.__name__}")
             self.__sent_DMmsg = None
 
     async def __send_to_udump(self):
